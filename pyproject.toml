@@ -1,0 +1,19 @@
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py39
+[testenv:py39]
+deps =
+    pytest
+    pre-commit
+    pylint
+commands =
+    pytest
+    pre-commit run --all-files
+"""
+
+[tool.pylint.format]
+max-line-length=120
+
+[tool.pylint.messages_control]
+disable = []
