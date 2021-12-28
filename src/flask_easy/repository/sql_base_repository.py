@@ -9,7 +9,7 @@ from ..extensions import db
 from .crud_repository_interface import CrudRepositoryInterface
 
 
-class SqlBaseRepository:
+class SqlRepository(CrudRepositoryInterface):
     model: db.Model
 
     def __init__(self):

@@ -7,7 +7,7 @@ from ..exc import OperationError, InternalServerError, NotFoundException
 from .crud_repository_interface import CrudRepositoryInterface
 
 
-class MongoBaseRepository(CrudRepositoryInterface):
+class MongoRepository(CrudRepositoryInterface):
     model: mongoengine
 
     def index(self):
@@ -18,7 +18,7 @@ class MongoBaseRepository(CrudRepositoryInterface):
         try:
             return self.model.objects()
         except mongoengine.OperationError:
-            raise OperationError(message="Could not get resource")
+            raise OperationError(message="Could not perform operation")
 
     def create(self, obj_data: dict):
         """
@@ -31,7 +31,7 @@ class MongoBaseRepository(CrudRepositoryInterface):
             db_obj.save()
             return db_obj
         except mongoengine.OperationError:
-            raise OperationError(message="Could not create resource")
+            raise OperationError(message="Could not perform operation")
         except ServerSelectionTimeoutError as e:
             raise InternalServerError(message=e.details)
 
@@ -47,7 +47,7 @@ class MongoBaseRepository(CrudRepositoryInterface):
             db_obj.modify(**obj_in)
             return db_obj
         except mongoengine.OperationError:
-            raise OperationError(message="Could not update resource")
+            raise OperationError(message="Could not perform operation")
         except ServerSelectionTimeoutError as e:
             raise InternalServerError(message=e.details)
 
@@ -64,6 +64,8 @@ class MongoBaseRepository(CrudRepositoryInterface):
             return db_obj
         except mongoengine.DoesNotExist:
             raise NotFoundException({"error": "Resource does not exist"})
+        except mongoengine.OperationError:
+            raise OperationError(message="Could not perform operation")
 
     def find_all(self, filter_param: dict):
         """
@@ -84,7 +86,7 @@ class MongoBaseRepository(CrudRepositoryInterface):
                 {"error": f"Resource of id {obj_id} does not exist"}
             )
         except mongoengine.OperationError:
-            raise OperationError("Resource query failed")
+            raise OperationError(message="Could not perform operation")
         except ServerSelectionTimeoutError as e:
             raise InternalServerError(message=e.details)
 
@@ -103,6 +105,6 @@ class MongoBaseRepository(CrudRepositoryInterface):
                 {"error": f"Resource of id {obj_id} does not exist"}
             )
         except mongoengine.OperationError:
-            raise OperationError("Resource deletion failed")
+            raise OperationError(message="Could not perform operation")
         except ServerSelectionTimeoutError as e:
             raise InternalServerError(message=e.details)

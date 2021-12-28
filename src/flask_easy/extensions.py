@@ -8,4 +8,4 @@ from flask_apispec import FlaskApiSpec
 db = SQLAlchemy()
 migrate = Migrate()
 ma = Marshmallow()
-docs = FlaskApiSpec()
+docs = FlaskApiSpec(document_options=False)

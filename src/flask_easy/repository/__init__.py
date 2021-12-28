@@ -1,2 +1,2 @@
-from .crud_repository import CrudRepository
-from .sql_base_repository import SqlBaseRepository
+from .sql_base_repository import SqlRepository
+from .mongo_base_repository import MongoRepository

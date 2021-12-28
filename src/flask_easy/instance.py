@@ -4,13 +4,14 @@ import importlib.util
 import typing
 import os
 
+from functools import cached_property
 from flask import Flask
 from flask_mongoengine import MongoEngine
 
 from .exc.app_exceptions import AppExceptionCase, HTTPException
 from .exc.handler import app_exception_handler
 from .exc.setup_exceptions import DBConnectionException
-from .extensions import ma, migrate, db
+from .extensions import ma, migrate, db, docs
 from .generators import init_generators
 from .log import default_handler
 
@@ -25,11 +26,12 @@ class FlaskEasy:
         self.app = app
         with app.app_context():
             app.logger.addHandler(default_handler)
-            self.register_extensions(app)
-            self.register_blueprints()
+            self._register_extensions(app)
+            self._register_blueprints()
+            self.register_apispec(app)
         return app
 
-    def register_extensions(self, flask_app: Flask):
+    def _register_extensions(self, flask_app: Flask):
         """Register flask extensions"""
 
         self.initialize_databases(flask_app)
@@ -73,8 +75,7 @@ class FlaskEasy:
         else:
             db_engine_port_map = {
                 "postgres": ("postgresql+psycopg2", int(db_port) if db_port else 5432),
-                "mysql": ("mysql+p"
-                          "ymysql", int(db_port) if db_port else 3306),
+                "mysql": ("mysql+pymysql", int(db_port) if db_port else 3306),
                 "oracle": ("oracle+cx_oracle", int(db_port) if db_port else 1521),
                 "mssql": ("mssql+pymssql", int(db_port) if db_port else 1433),
                 "sqlite": ("sqlite", None),
@@ -91,8 +92,7 @@ class FlaskEasy:
                 engine_url_prefix, db_host, db_user, db_password, db_port, db_name
             )
 
-            # app.config.from_mapping(SQLALCHEMY_DATABASE_URI=db_url)
-            app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+            app.config.from_mapping(SQLALCHEMY_DATABASE_URI=db_url)
             app.config.from_mapping(SQLALCHEMY_TRACK_MODIFICATIONS=True)
             db.init_app(flask_app)
             migrate.init_app(flask_app, db)
@@ -100,14 +100,20 @@ class FlaskEasy:
                 db.create_all()
                 ma.init_app(flask_app)
 
-    def register_blueprints(self):
+    @cached_property
+    def _urls(self):
+        spec = importlib.util.spec_from_file_location("urls",  os.path.join(self.app.root_path, "urls.py"))
+        urls = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(urls)
+        return urls
+
+    def _register_blueprints(self):
         """
         Register blueprints. Read from urls in project root path and register blueprints
         :return:
         """
-        spec = importlib.util.spec_from_file_location("urls",  os.path.join(self.app.root_path, "urls.py"))
-        urls = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(urls)
+
+        urls = self._urls
         urls.blueprints(self.app)
 
     @staticmethod
@@ -126,3 +132,19 @@ class FlaskEasy:
             port=db_port,
             db_name=db_name,
         )
+
+    @staticmethod
+    def register_apispec(app):
+        docs.init_app(app)
+        for name, rule in app.view_functions.items():
+            try:
+                blueprint_name, _ = name.split('.')
+            except ValueError:
+                blueprint_name = None
+
+            if blueprint_name:
+                try:
+                    docs.register(rule, blueprint=blueprint_name)
+                except TypeError:
+                    pass
+
