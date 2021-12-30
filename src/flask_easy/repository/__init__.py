@@ -1,2 +1,7 @@
-from .sql_base_repository import SqlRepository
-from .mongo_base_repository import MongoRepository
+"""
+Repositories
+
+This module aggregates submodules. Import repositories from here
+"""
+from .sql_repository import SqlRepository
+from .mongo_repository import MongoRepository

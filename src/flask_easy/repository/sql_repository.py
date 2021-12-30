@@ -1,26 +1,20 @@
-import typing
-from typing import Union, List, Optional
+from typing import Union, Optional, Type, List
 
-from sqlalchemy.exc import DBAPIError, IntegrityError
+from sqlalchemy.exc import DBAPIError
 
 from ..exc import NotFoundException
 from ..exc.app_exceptions import OperationError
 from ..extensions import db
-from .crud_repository_interface import CrudRepositoryInterface
+from .repository_interface import RepositoryInterface
 
 
-class SqlRepository(CrudRepositoryInterface):
-    model: db.Model
+class SqlRepository(RepositoryInterface):
+    """
+    Base class to be inherited by all repositories. This class comes with
+    base crud functionalities attached
+    """
 
-    def __init__(self):
-        """
-        Base class to be inherited by all repositories. This class comes with
-        base crud functionalities attached
-
-        :param model: base model of the class to be used for queries
-        """
-
-        self.db = db
+    model: List[db.Model]
 
     def index(self) -> List[db.Model]:
         """
@@ -33,51 +27,55 @@ class SqlRepository(CrudRepositoryInterface):
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
-    def create(self, obj_data: dict) -> db.Model:
+    def create(self, data: dict) -> db.Model:
         """
 
-        :param obj_in: the data you want to use to create the model
-        :return: {object} - Returns an instance object of the model passed
+        :param data: data to persist in the database
+        :return: {Model} - Returns an instance object of the model passed
         """
         try:
-            db_obj = self.model(**obj_data)
-            self.db.session.add(db_obj)
-            self.db.session.commit()
+            db_obj = self.model(**data)
+            db.session.add(db_obj)
+            db.session.commit()
             return db_obj
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
-    def create_all(self, data: List[dict]) -> List[db.Model]:
-
+    def create_all(self, data: List[dict]):
+        """
+        Creates multiple objects from data provided
+        :param data: List of data to persist in the database
+        :return:
+        """
         try:
             obj_list = [self.model(**item) for item in data]
-            self.db.session.add_all(obj_list)
-            self.db.session.commit()
+            db.session.add_all(obj_list)
+            db.session.commit()
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
-    def update_by_id(self, obj_id: Union[int, str], obj_in: dict) -> db.Model:
+    def update_by_id(self, obj_id: Union[int, str], data: dict) -> db.Model:
         """
         :param obj_id: {int}
-        :param obj_in: {dict}
+        :param data: {dict}
         :return: model_object - Returns an instance object of the model passed
         """
         db_obj = self.find_by_id(obj_id)
         if not db_obj:
             raise NotFoundException(f"Resource of id {obj_id} does not exist")
         try:
-            for field in obj_in:
+            for field in data:
                 if hasattr(db_obj, field):
-                    setattr(db_obj, field, obj_in[field])
-            self.db.session.add(db_obj)
-            self.db.session.commit()
+                    setattr(db_obj, field, data[field])
+            db.session.add(db_obj)
+            db.session.commit()
             return db_obj
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
     def find_by_id(self, obj_id: int) -> db.Model:
         """
-        returns a user if it exists in the database
+        returns an object if its id exists in the database
         :param obj_id: int - id of the user
         :return: model_object - Returns an instance object of the model passed
         """
@@ -88,7 +86,6 @@ class SqlRepository(CrudRepositoryInterface):
             return db_obj
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
-
 
     def find(self, params: dict) -> db.Model:
         """
@@ -103,21 +100,22 @@ class SqlRepository(CrudRepositoryInterface):
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
-    def find_all(self, params: dict) -> List[Optional[db.Model]]:
+    def find_all(self, query_params: dict) -> List[Optional[db.Model]]:
         """
-        find all object matching the query parameters
-        :param params: filter parameters
-        :return:
+        returns all items that satisfies the filter query_params passed to it
+
+        :param query_params: query parameters to filter by
+        :return: model_object - Returns an instance object of the model passed
         """
         try:
-            db_obj = self.model.query.filter_by(**params).all()
+            db_obj = self.model.query.filter_by(**query_params).all()
             return db_obj
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
     def delete(self, obj_id: Union[int, str]) -> None:
         """
-        delete an object matching the query parameters
+        delete an object matching the id
         :param obj_id: id of object to be deleted
         :return:
         """

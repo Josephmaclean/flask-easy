@@ -1,10 +1,13 @@
+"""
+Repository Interface
+"""
 import abc
-import typing
+from typing import List, Union
 
-IdType = typing.Union[int, str]
+IdType = Union[int, str]
 
 
-class CrudRepositoryInterface(metaclass=abc.ABCMeta):
+class RepositoryInterface(metaclass=abc.ABCMeta):
     @property
     def model(self):
         """
@@ -18,26 +21,35 @@ class CrudRepositoryInterface(metaclass=abc.ABCMeta):
     def index(self):
         """
         when inherited, index should show all data belonging to a model
-        :return: obj_data
+        :return: data
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def create(self, obj_data: typing.Dict):
+    def create(self, data: dict):
         """
         when inherited, creates a new record
-        :param obj_data: the data you want to use to create the model
-        :return: obj_data
+        :param data: the data you want to use to create the model
+        :return: data
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def update_by_id(self, obj_id: IdType, obj_in: typing.Dict):
+    def create_all(self, data: List[dict]):
+        """
+        when inherited, creates new records
+        :param data: the data you want to use to create the model
+        :return: data
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def update_by_id(self, obj_id: IdType, data: dict):
         """
         when inherited, updates a record by taking in the id, and the data you
         want to update with
         :param obj_id:
-        :param obj_in:
+        :param data:
         :return: a model object
         """
 
@@ -54,18 +66,18 @@ class CrudRepositoryInterface(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def find(self, obj_data: typing.Dict):
+    def find(self, query_params: dict):
         """
         when inherited, should find a record by the parameters passed
-        :param obj_data:
+        :param query_params:
         :return: a model object
         """
 
     @abc.abstractmethod
-    def find_all(self, data: typing.Dict):
+    def find_all(self, query_params: dict):
         """
         when inherited, should find all records by the parameters passed
-        :param obj_data:
+        :param query_params:
         :return: a model object
         """
 
