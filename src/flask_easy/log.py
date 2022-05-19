@@ -11,6 +11,7 @@ class RequestFormatter(logging.Formatter):
     """
     Request formatter to handle log format
     """
+
     def format(self, record):
         if has_request_context():
             record.url = request.url

@@ -11,6 +11,7 @@ class ServiceResult:
     """
     Service Result
     """
+
     __slots__ = ["value", "status_code", "headers"]
 
     def __init__(self, value, status_code, headers=None):
@@ -19,7 +20,9 @@ class ServiceResult:
         self.headers = headers
 
 
-def handle_result(result: typing.Union[tuple, ServiceResult], schema: Schema=None, many=False):
+def handle_result(
+    result: typing.Union[tuple, ServiceResult], schema: Schema = None, many=False
+):
     """
     convert result returned from services to http result
     :param result: result returned from service

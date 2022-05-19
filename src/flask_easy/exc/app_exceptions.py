@@ -20,7 +20,9 @@ class AppExceptionCase(Exception):
         app.logger.error(message)
         self.exception_case = self.__class__.__name__
         self.status_code = status_code
-        self.context = message
+        self.context = (
+            message if isinstance(message, dict) else {self.__class__.__name__: message}
+        )
 
     def __str__(self):
         return (
@@ -60,7 +62,9 @@ class NotFoundException(AppExceptionCase):
 class Unauthorized(AppExceptionCase):
     """
     Unauthorized
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
     """
+
     def __init__(self, message="Unauthorized", status_code=401):
         """
         Unauthorized

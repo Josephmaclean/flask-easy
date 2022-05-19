@@ -6,29 +6,60 @@ import os
 
 from functools import cached_property
 from flask import Flask, Response
+from flask.typing import ResponseReturnValue
 from flask_marshmallow import Marshmallow
-
 from .exc.app_exceptions import AppExceptionCase, DBConnectionException
-from .extensions import db
 from .log import default_handler
+from .database import Database
+from flask_easy.scripts.cli import init_cli
+from .response import ResponseEntity
+from flasgger import Swagger
+
+db = Database()
+swag = Swagger()
+
+
+class FlaskInstance(Flask):
+    def make_response(self, response: ResponseReturnValue) -> Response:
+        """
+        Overwrite the base response class in order to use the ResponseEntity class
+        see https://flask.palletsprojects.com/en/2.1.x/api/#flask.make_response for more info
+        """
+        if isinstance(response, ResponseEntity):
+            schema = response.res_schema
+            value = response.value
+            many = response.many
+            response = schema(many=many).dumps(value)
+            return Response(response)
+        return super().make_response(response)
 
 
 class FlaskEasy:
+    """
+    Main class of flask easy. This initializes all the necessary/needed libraries so you don't have to do it yourself.
+    """
+
     app: Flask
 
-    def init_app(self, app: Flask) -> Flask:
-        if not app or not isinstance(app, Flask):
-            raise TypeError("Invalid Flask application instance")
+    def init_app(self, **kwargs) -> Flask:
+        config = kwargs.pop("config")
+        self.app = FlaskInstance(**kwargs)
+        self.app.config.from_object(config)
+        # if not app or not isinstance(app, Flask):
+        #     raise TypeError("Invalid Flask application instance")
 
-        self.app = app
-        with app.app_context():
-            app.logger.addHandler(default_handler)
+        # self.app = app
+
+        # self.app.response_class = ApiResponse
+        with self.app.app_context():
+            self.app.logger.addHandler(default_handler)
             self._initialize_databases()
             self._handle_errors()
             self._register_blueprints()
             self._initialize_swagger()
+            init_cli(self.app, db)
 
-        return app
+        return self.app
 
     def _handle_errors(self):
         @self.app.errorhandler(AppExceptionCase)
@@ -50,11 +81,8 @@ class FlaskEasy:
 
         if db_engine == "mongodb":
             self._initialize_mongodb(db_host, db_name, db_password, db_port, db_user)
-
         else:
-            self._initialize_sql(
-                db_engine, db_host, db_name, db_password, db_port, db_user
-            )
+            db.init_app(self.app)
 
     def _initialize_mongodb(self, db_host, db_name, db_password, db_port, db_user):
         try:
@@ -81,8 +109,6 @@ class FlaskEasy:
         db_engine_port_map = {
             "postgres": ("postgresql+psycopg2", int(db_port) if db_port else 5432),
             "mysql": ("mysql+pymysql", int(db_port) if db_port else 3306),
-            "oracle": ("oracle+cx_oracle", int(db_port) if db_port else 1521),
-            "mssql": ("mssql+pymssql", int(db_port) if db_port else 1433),
             "sqlite": ("sqlite", None),
         }
         if db_engine not in db_engine_port_map:
@@ -93,8 +119,6 @@ class FlaskEasy:
         db_url = self.generate_db_url(
             engine_url_prefix, db_host, db_user, db_password, db_port, db_name
         )
-        self.app.config.from_mapping(SQLALCHEMY_DATABASE_URI=db_url)
-        self.app.config.from_mapping(SQLALCHEMY_TRACK_MODIFICATIONS=True)
         db.init_app(self.app)
         try:
             from flask_migrate import Migrate
@@ -118,13 +142,9 @@ class FlaskEasy:
         return urls
 
     def _initialize_swagger(self):
-        try:
-            from flasgger import Swagger
-
-            swagger = Swagger()
-            swagger.init_app(self.app)
-        except ImportError:
-            raise ImportError("Flasgger not installed")
+        app_name = self.app.config.get("APP_NAME")
+        self.app.config["SWAGGER"] = {"title": f"{app_name} API Docs", "uiversion": 3}
+        swag.init_app(self.app)
 
     def _register_blueprints(self):
         """
@@ -155,9 +175,7 @@ class FlaskEasy:
     @staticmethod
     def app_exception_handler(exc):
         return Response(
-            json.dumps(
-                {"app_exception": exc.exception_case, "errorMessage": exc.context}
-            ),
+            json.dumps(exc.context),
             status=exc.status_code,
             mimetype="application/json",
         )

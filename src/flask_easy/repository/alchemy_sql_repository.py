@@ -8,15 +8,20 @@ from ..extensions import db
 from .repository_interface import RepositoryInterface
 
 
-class SqlRepository(RepositoryInterface):
+class AlchemySqlRepository(RepositoryInterface):
     """
     Base class to be inherited by all repositories. This class comes with
     base crud functionalities attached
     """
 
-    model: List[db.Model]
+    model: type[db.Model]
 
-    def index(self) -> List[db.Model]:
+    def __new__(cls, *args, **kwargs):
+        obj = super().__new__(cls, *args, **kwargs)
+        obj.db = db
+        return obj
+
+    def index(self) -> list[db.Model]:
         """
         :return: {list} returns a list of objects of type model
         """
@@ -35,13 +40,13 @@ class SqlRepository(RepositoryInterface):
         """
         try:
             db_obj = self.model(**data)
-            db.session.add(db_obj)
-            db.session.commit()
+            self.db.session.add(db_obj)
+            self.db.session.commit()
             return db_obj
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
-    def create_all(self, data: List[dict]):
+    def create_all(self, data: list[dict]):
         """
         Creates multiple objects from data provided
         :param data: List of data to persist in the database
@@ -49,8 +54,8 @@ class SqlRepository(RepositoryInterface):
         """
         try:
             obj_list = [self.model(**item) for item in data]
-            db.session.add_all(obj_list)
-            db.session.commit()
+            self.db.session.add_all(obj_list)
+            self.db.session.commit()
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
@@ -67,8 +72,8 @@ class SqlRepository(RepositoryInterface):
             for field in data:
                 if hasattr(db_obj, field):
                     setattr(db_obj, field, data[field])
-            db.session.add(db_obj)
-            db.session.commit()
+            self.db.session.add(db_obj)
+            self.db.session.commit()
             return db_obj
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
@@ -100,7 +105,7 @@ class SqlRepository(RepositoryInterface):
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
 
-    def find_all(self, query_params: dict) -> List[Optional[db.Model]]:
+    def find_all(self, query_params: dict) -> list[Optional[db.Model]]:
         """
         returns all items that satisfies the filter query_params passed to it
 
@@ -124,7 +129,7 @@ class SqlRepository(RepositoryInterface):
             db_obj = self.find_by_id(obj_id)
             if not db_obj:
                 raise NotFoundException
-            db.session.delete(db_obj)
-            db.session.commit()
+            self.db.session.delete(db_obj)
+            self.db.session.commit()
         except DBAPIError as e:
             raise OperationError(message=e.orig.args[0])
