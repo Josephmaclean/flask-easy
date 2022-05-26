@@ -1,13 +1,19 @@
 """
-Repository Interface
+repository_interface.py
+
+Author: Joseph Maclean Arhin
 """
 import abc
-from typing import List, Union
+import typing as t
 
-IdType = Union[int, str]
+IdType = t.Union[int, str]
 
 
 class RepositoryInterface(metaclass=abc.ABCMeta):
+    """
+    Base repository interface to be inherited by all repositories
+    """
+
     @property
     def model(self):
         """
@@ -17,16 +23,18 @@ class RepositoryInterface(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+    @classmethod
     @abc.abstractmethod
-    def index(self):
+    def index(cls):
         """
         when inherited, index should show all data belonging to a model
         :return: data
         """
         raise NotImplementedError
 
+    @classmethod
     @abc.abstractmethod
-    def create(self, data: dict):
+    def create(cls, data: dict):
         """
         when inherited, creates a new record
         :param data: the data you want to use to create the model
@@ -34,8 +42,9 @@ class RepositoryInterface(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+    @classmethod
     @abc.abstractmethod
-    def create_all(self, data: List[dict]):
+    def create_all(cls, data: t.List[dict]):
         """
         when inherited, creates new records
         :param data: the data you want to use to create the model
@@ -43,8 +52,9 @@ class RepositoryInterface(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+    @classmethod
     @abc.abstractmethod
-    def update_by_id(self, obj_id: IdType, data: dict):
+    def update_by_id(cls, obj_id: IdType, data: dict):
         """
         when inherited, updates a record by taking in the id, and the data you
         want to update with
@@ -55,8 +65,9 @@ class RepositoryInterface(metaclass=abc.ABCMeta):
 
         raise NotImplementedError
 
+    @classmethod
     @abc.abstractmethod
-    def find_by_id(self, obj_id: IdType):
+    def find_by_id(cls, obj_id: IdType):
         """
         when inherited, finds a record by id
         :param obj_id:
@@ -65,24 +76,27 @@ class RepositoryInterface(metaclass=abc.ABCMeta):
 
         raise NotImplementedError
 
+    @classmethod
     @abc.abstractmethod
-    def find(self, query_params: dict):
+    def find(cls, query_params: dict):
         """
         when inherited, should find a record by the parameters passed
         :param query_params:
         :return: a model object
         """
 
+    @classmethod
     @abc.abstractmethod
-    def find_all(self, query_params: dict):
+    def find_all(cls, query_params: dict):
         """
         when inherited, should find all records by the parameters passed
         :param query_params:
         :return: a model object
         """
 
+    @classmethod
     @abc.abstractmethod
-    def delete(self, obj_id: IdType):
+    def delete(cls, obj_id: IdType):
         """
         takes in an id, finds and deletes the record
         :param obj_id:

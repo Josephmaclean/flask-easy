@@ -1,8 +1,10 @@
 """
-Validator
+validator.py
+
+Author: Joseph Maclean Arhin
 """
 
-from typing import Type
+import typing as t
 from functools import wraps
 from flask import request
 from marshmallow import Schema
@@ -10,7 +12,7 @@ from marshmallow import Schema
 from flask_easy.exc.app_exceptions import ValidationException
 
 
-def validator(schema: Type[Schema]):
+def validator(schema: t.Type[Schema]):
     """
     A wrapper to validate input data using marshmallow schema
     e.g:

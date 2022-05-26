@@ -11,7 +11,7 @@ class AppExceptionCase(Exception):
     Base exception case to be inherited by all other exceptions
     """
 
-    def __init__(self, status_code: int, message):
+    def __init__(self, status_code: int, message):  # pylint: disable=w0231
         """
 
         :param status_code:
@@ -20,12 +20,14 @@ class AppExceptionCase(Exception):
         app.logger.error(message)
         self.exception_case = self.__class__.__name__
         self.status_code = status_code
-        self.context = message
+        self.context = (
+            message if isinstance(message, dict) else {self.__class__.__name__: message}
+        )
 
     def __str__(self):
         return (
             f"<AppException {self.exception_case} - "
-            + f"status_code = {self.status_code} - message = {self.context}"
+            + f"_status_code = {self.status_code} - message = {self.context}"
         )
 
 
@@ -60,7 +62,9 @@ class NotFoundException(AppExceptionCase):
 class Unauthorized(AppExceptionCase):
     """
     Unauthorized
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
     """
+
     def __init__(self, message="Unauthorized", status_code=401):
         """
         Unauthorized
@@ -104,12 +108,17 @@ class ExpiredTokenException(BadRequest):
 
 
 class SetupError(Exception):
+    """
+    Setup Error
+    """
+
     description: Optional[str] = None
 
-    def __init__(self, description: Optional[str] = None):
+    def __init__(self, description: Optional[str] = None):  # pylint: disable=w0231
+        """initialize setup error"""
         if description:
             self.description = description
 
 
 class DBConnectionException(SetupError):
-    pass
+    """Thrown when there's an error in a db connection"""
