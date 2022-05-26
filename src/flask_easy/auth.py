@@ -1,14 +1,21 @@
-import os
+"""
+auth.py
 
-import jwt
+Author: Joseph Maclean Arhin
+"""
+import os
 import inspect
 from functools import wraps
+
+import jwt
 from flask import request
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError, PyJWTError
 from .exc import Unauthorized, ExpiredTokenException, OperationError
 
 
 def auth_required(other_roles=None):
+    """auth required decorator"""
+
     def authorize_user(func):
         """
         A wrapper to authorize an action using
@@ -26,9 +33,7 @@ def auth_required(other_roles=None):
             try:
                 key = os.getenv("JWT_SECRET")  # noqa E501
                 payload = jwt.decode(
-                    token,
-                    key=key,
-                    algorithms=["HS256", "RS256"]
+                    token, key=key, algorithms=["HS256", "RS256"]
                 )  # noqa E501
                 # Get realm roles from payload
                 available_roles = payload.get("realm_access").get("roles")
@@ -51,12 +56,12 @@ def auth_required(other_roles=None):
                             "preferred_username"
                         )  # noqa E501
                     return func(*args, **kwargs)
-            except ExpiredSignatureError:
-                raise ExpiredTokenException("Token Expired")
-            except InvalidTokenError:
-                raise OperationError("Invalid Token")
-            except PyJWTError:
-                raise OperationError("Error decoding token")
+            except ExpiredSignatureError as error:
+                raise ExpiredTokenException("Token Expired") from error
+            except InvalidTokenError as error:
+                raise OperationError("Invalid Token") from error
+            except PyJWTError as error:
+                raise OperationError("Error decoding token") from error
             raise Unauthorized(status_code=403)
 
         return view_wrapper
@@ -65,6 +70,7 @@ def auth_required(other_roles=None):
 
 
 def is_authorized(access_roles, available_roles):
+    """Check if access roles is in available roles"""
     for role in access_roles:
         if role in available_roles:
             return True

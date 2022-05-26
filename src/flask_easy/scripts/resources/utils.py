@@ -1,27 +1,29 @@
+"""
+utils.py
+
+Author: Joseph Maclean Arhin
+"""
+
 import os
 
 
-def convert_to_camelcase(string: str):
+def convert_to_camelcase(input_string: str):
     """
     Algorithm to convert snake_case to CamelCase
     """
-    s = list(string)
-
-    if s[-1] == "_":
-        s[-1] = ""
-
-    for i in range(len(s), 0, -1):
-        if s[i - 1] == "_":
-            s[i - 1] = ""
-            s[i] = s[i].upper()
-    s[0] = s[0].upper()
-
-    return "".join(s)
+    return "".join([string.capitalize() for string in input_string.split("_")])
 
 
 def add_to_init(dir_path, file_name, class_name):
-    with open(os.path.join(dir_path, "__init__.py"), "a") as w:
-        w.write(f"from .{file_name} import {class_name}\n")
+    """
+    import class from file into an __init__ file
+    :param dir_path:
+    :param file_name:
+    :param class_name:
+    :return:
+    """
+    with open(os.path.join(dir_path, "__init__.py"), "a", encoding="UTF-8") as file:
+        file.write(f"from .{file_name} import {class_name}")
 
 
 def remove_suffix(string: str, suffix):

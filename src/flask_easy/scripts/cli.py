@@ -1,28 +1,50 @@
+"""
+cli.py
+
+Author: Joseph Maclean Arhin
+"""
 import click
 from flask import Flask
 from peewee_migrate import Router
+from flask_easy.factory import run_seeder
 from .resources import create_model, create_repository, create_view
 
 
-def init_cli(app: Flask, db):
+def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
+    """initialize all cli commands"""
+
     @click.group()
     def easy():
         """perform easy actions"""
-        pass
 
     @easy.group()
     def generate():
-        pass
+        """perform scaffolding actions"""
+
+    @easy.command("db:seed")
+    @click.argument("cycle", required=False, type=int)
+    @click.option("--class_name", "-c")
+    def seed(cycle: int, class_name: str):
+        """
+        seed database
+        :param cycle:
+        :param class_name:
+        :return:
+        """
+        count = cycle if cycle else 1
+        click.echo("seeding...")
+        run_seeder(count, class_name, app)
+        click.echo(click.style("seeding complete!!!", fg="bright_green"))
 
     @easy.command("make:migration")
     @click.argument("name", required=False)
     def gen(name: str):
         """
-        eyc
+        make migration
         :param name:
         :return:
         """
-        router = Router(db.database)
+        router = Router(db_conn.database)
         if not name:
             router.create(auto=True)
         else:
@@ -31,8 +53,8 @@ def init_cli(app: Flask, db):
     @easy.command("migrate")
     @click.argument("name", required=False)
     @click.option("--fake", "-f", "fake", is_flag=True)
-    def migrate(name: str, fake: str):
-        router = Router(db.database)
+    def migrate(name: str, fake: bool):
+        router = Router(db_conn.database)
         if not name:
             router.run(fake=fake)
         else:
@@ -42,12 +64,16 @@ def init_cli(app: Flask, db):
     @click.argument("name", required=False)
     @click.option("--steps", "-s", "steps", type=int, default=1)
     def rollback(name: str, steps: int):
-        router = Router(db.database)
+        router = Router(db_conn.database)
 
         if not name:
             if steps > len(router.done):
-                click.echo(click.style(f"steps is greater than available number migrations({len(router.done)})",
-                                       fg="bright_red"))
+                click.echo(
+                    click.style(
+                        f"steps is greater than available number migrations({len(router.done)})",
+                        fg="bright_red",
+                    )
+                )
                 return
             if steps < 1:
                 click.echo(click.style("invalid number of steps", fg="bright_red"))
@@ -60,30 +86,32 @@ def init_cli(app: Flask, db):
             router.rollback(name)
 
     @easy.command("migrate:list")
-    def list():
-        router = Router(db.database)
-        click.echo(click.style('Migrations done:', fg="bright_green", underline=True))
-        click.echo('\n'.join(router.done))
-        click.echo('')
-        click.echo(click.style('Migrations to do:', underline=True))
-        click.echo('\n'.join(router.diff))
+    def list_():
+        router = Router(db_conn.database)
+        click.echo(click.style("Migrations done:", fg="bright_green", underline=True))
+        click.echo("\n".join(router.done))
+        click.echo("")
+        click.echo(click.style("Migrations to do:", underline=True))
+        click.echo("\n".join(router.diff))
 
     @generate.command("model")
     @click.argument("name")
-    def generate_model(name: str):
+    @click.option("-r", "--repository", "repository", is_flag=True)
+    def generate_model(name: str, repository):
         config = app.config
         if config:
             try:
                 db_engine = config["DB_ENGINE"]
                 if db_engine == "mongodb":
                     create_model(app.root_path, name, is_sql=False)
-                    create_repository(
-                        app.root_path, f"{name}_repository", is_sql=False
-                    )
+                    is_sql = False
                 else:
                     create_model(app.root_path, name)
+                    is_sql = True
+
+                if repository:
                     create_repository(
-                        app.root_path, f"{name}_repository"
+                        app.root_path, f"{name}_repository", is_sql=is_sql
                     )
 
                 click.echo(
@@ -96,9 +124,8 @@ def init_cli(app: Flask, db):
                 click.echo(click.style("DB_ENGINE not set", fg="red"))
 
     @generate.command("repository")
-    @click.argument("name", required=False)
-    @click.option("-m", "--model", "model")
-    def generate_repository(name: str, model: str):
+    @click.argument("name")
+    def generate_repository(name: str):
         config = app.config
         if config:
             try:
@@ -110,9 +137,7 @@ def init_cli(app: Flask, db):
                         is_sql=False,
                     )
                 else:
-                    create_repository(
-                        app.root_path, f"{name}_repository"
-                    )
+                    create_repository(app.root_path, f"{name}_repository")
 
                 click.echo(
                     click.style(
@@ -126,6 +151,7 @@ def init_cli(app: Flask, db):
     @click.argument("name", required=False)
     def generate_view(name: str):
         create_view(app, name)
+        click.echo(click.style(f"{name}_view generated successfully", fg="green"))
 
     app.cli.add_command(easy)
     app.cli.add_command(generate)

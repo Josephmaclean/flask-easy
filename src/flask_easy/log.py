@@ -1,5 +1,7 @@
 """
-Logger
+log.py
+
+Author: Joseph Maclean Arhin
 """
 
 import logging

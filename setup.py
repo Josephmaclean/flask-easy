@@ -1,3 +1,8 @@
+"""
+setup.py
+
+Author: Joseph Maclean Arhin
+"""
 from setuptools import setup
 
 setup(
@@ -11,6 +16,7 @@ setup(
         "peewee-migrate>=1.4.8",
         "watchdog>=2.1.2",
         "cookiecutter>=1.7.3",
+        "apispec>=5.2.2",
     ],
     entry_points={
         "console_scripts": ["easy-admin=flask_easy.scripts.easy_scripts:cli"]

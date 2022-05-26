@@ -1,5 +1,10 @@
-import os
+"""
+model.py
 
+Author: Joseph Maclean Arhin
+"""
+
+import os
 import click
 from jinja2 import Template
 
@@ -23,10 +28,10 @@ def create_model(root_path, name, is_sql=True):
     template_string = get_template_string(is_sql)
     template = Template(template_string)
     data = template.render(model_name=model_name)
-    file = os.path.join(file_dir, file_name)
-    if not os.path.exists(file):
-        with open(file, "w") as w:
-            w.write(data)
+    file_path = os.path.join(file_dir, file_name)
+    if not os.path.exists(file_path):
+        with open(file_path, "w", encoding="UTF-8") as file:
+            file.write(data)
 
         add_to_init(file_dir, name, model_name)
     else:
@@ -34,11 +39,11 @@ def create_model(root_path, name, is_sql=True):
 
 
 def get_template_string(sql):
+    """generate template string"""
     if sql:
         template_string = """from flask_easy import db, fields
 
 
-@dataclass
 class {{model_name}}(db.Model):
     pass
 
