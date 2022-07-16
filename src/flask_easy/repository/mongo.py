@@ -12,9 +12,9 @@ from ..exc import OperationError, NotFoundException
 from .repository_interface import RepositoryInterface
 
 
-class MongoRepository(RepositoryInterface):
+class Repository(RepositoryInterface):
     """
-    MongoRepository to be inherited
+    Repository to be inherited
     """
 
     model: t.Type[me.Document]

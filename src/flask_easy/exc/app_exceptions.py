@@ -70,7 +70,8 @@ class Unauthorized(AppExceptionCase):
         Unauthorized
         :param message: extra dictionary object to give the error more context
         """
-        AppExceptionCase.__init__(self, status_code, message)
+        # AppExceptionCase.__init__(self, status_code, message)
+        super().__init__(status_code, message)
 
 
 class BadRequest(AppExceptionCase):
@@ -98,12 +99,6 @@ class ResourceExists(BadRequest):
 class ValidationException(BadRequest):
     """
     Validation Exception
-    """
-
-
-class ExpiredTokenException(BadRequest):
-    """
-    Raised when a token is expired
     """
 
 

@@ -6,8 +6,9 @@ Author: Joseph Maclean Arhin
 import click
 from flask import Flask
 from peewee_migrate import Router
-from flask_easy.factory import run_seeder
 from .resources import create_model, create_repository, create_view
+
+MIGRATION_ERROR = ("migrations can only be run on sql databases",)
 
 
 def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
@@ -21,6 +22,10 @@ def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
     def generate():
         """perform scaffolding actions"""
 
+    def get_db():
+        config = app.config
+        return config["DB_ENGINE"]
+
     @easy.command("db:seed")
     @click.argument("cycle", required=False, type=int)
     @click.option("--class_name", "-c")
@@ -31,6 +36,8 @@ def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
         :param class_name:
         :return:
         """
+        from flask_easy.factory import run_seeder  # pylint: disable=C0415
+
         count = cycle if cycle else 1
         click.echo("seeding...")
         run_seeder(count, class_name, app)
@@ -44,55 +51,89 @@ def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
         :param name:
         :return:
         """
-        router = Router(db_conn.database)
-        if not name:
-            router.create(auto=True)
+        if get_db() == "mongodb":
+            click.echo(
+                click.style(
+                    MIGRATION_ERROR,
+                    fg="bright_red",
+                )
+            )
         else:
-            router.create(name, auto=True)
+            router = Router(db_conn.database)
+            if not name:
+                router.create(auto=True)
+            else:
+                router.create(name, auto=True)
 
     @easy.command("migrate")
     @click.argument("name", required=False)
     @click.option("--fake", "-f", "fake", is_flag=True)
     def migrate(name: str, fake: bool):
-        router = Router(db_conn.database)
-        if not name:
-            router.run(fake=fake)
+        if get_db() == "mongodb":
+            click.echo(
+                click.style(
+                    MIGRATION_ERROR,
+                    fg="bright_red",
+                )
+            )
         else:
-            router.run(name, fake=fake)
+            router = Router(db_conn.database)
+            if not name:
+                router.run(fake=fake)
+            else:
+                router.run(name, fake=fake)
 
     @easy.command("migrate:rollback")
     @click.argument("name", required=False)
     @click.option("--steps", "-s", "steps", type=int, default=1)
     def rollback(name: str, steps: int):
-        router = Router(db_conn.database)
-
-        if not name:
-            if steps > len(router.done):
-                click.echo(
-                    click.style(
-                        f"steps is greater than available number migrations({len(router.done)})",
-                        fg="bright_red",
-                    )
+        if get_db() == "mongodb":
+            click.echo(
+                click.style(
+                    MIGRATION_ERROR,
+                    fg="bright_red",
                 )
-                return
-            if steps < 1:
-                click.echo(click.style("invalid number of steps", fg="bright_red"))
-                return
-
-            for _ in range(steps):
-                last_migration = router.done[-1]
-                router.rollback(last_migration)
+            )
         else:
-            router.rollback(name)
+            router = Router(db_conn.database)
+
+            if not name:
+                if steps > len(router.done):
+                    click.echo(
+                        click.style(
+                            f"steps is greater than available number migrations({len(router.done)})",
+                            fg="bright_red",
+                        )
+                    )
+                    return
+                if steps < 1:
+                    click.echo(click.style("invalid number of steps", fg="bright_red"))
+                    return
+
+                for _ in range(steps):
+                    last_migration = router.done[-1]
+                    router.rollback(last_migration)
+            else:
+                router.rollback(name)
 
     @easy.command("migrate:list")
     def list_():
-        router = Router(db_conn.database)
-        click.echo(click.style("Migrations done:", fg="bright_green", underline=True))
-        click.echo("\n".join(router.done))
-        click.echo("")
-        click.echo(click.style("Migrations to do:", underline=True))
-        click.echo("\n".join(router.diff))
+        if get_db() == "mongodb":
+            click.echo(
+                click.style(
+                    MIGRATION_ERROR,
+                    fg="bright_red",
+                )
+            )
+        else:
+            router = Router(db_conn.database)
+            click.echo(
+                click.style("Migrations done:", fg="bright_green", underline=True)
+            )
+            click.echo("\n".join(router.done))
+            click.echo("")
+            click.echo(click.style("Migrations to do:", underline=True))
+            click.echo("\n".join(router.diff))
 
     @generate.command("model")
     @click.argument("name")

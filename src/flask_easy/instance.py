@@ -7,6 +7,9 @@ import importlib
 import importlib.util
 import json
 import os
+import typing as t
+
+from collections import namedtuple
 
 from functools import cached_property
 from flasgger import Swagger
@@ -16,9 +19,12 @@ from flask_easy.scripts.cli import init_cli
 from .exc.app_exceptions import AppExceptionCase
 from .database import Database
 from .response import ResponseEntity
+from .security import authenticator, TokenDecoder
 
 db = Database()
 swag = Swagger()
+
+Route = namedtuple("Route", "view url_prefix", defaults=[None])
 
 
 class FlaskInstance(Flask):
@@ -49,7 +55,7 @@ class FlaskInstance(Flask):
 
 class FlaskEasy:
     """
-    Main class of flask easy. This initializes all the necessary/needed libraries so you don't have to do it yourself.
+    Main class of flask easy. This initializes all the necessary/needed libraries
     """
 
     app: Flask
@@ -69,7 +75,6 @@ class FlaskEasy:
             self._register_blueprints()
             self._initialize_swagger()
             init_cli(self.app, db)
-
         return self.app
 
     def _handle_errors(self):
@@ -138,8 +143,9 @@ class FlaskEasy:
         :return:
         """
 
-        urls = self._urls
-        urls.blueprints(self.app)
+        routes: t.List[Route] = self._urls.routes
+        for url_route in routes:
+            self.app.register_blueprint(url_route.view, url_prefix=url_route.url_prefix)
 
     @staticmethod
     def generate_db_url(
@@ -176,6 +182,15 @@ class FlaskEasy:
         """
         return Response(
             json.dumps(exc.context),
-            status=exc._status_code,  # pylint: disable=w0212
+            status=exc.status_code,  # pylint: disable=w0212
             mimetype="application/json",
         )
+
+    @staticmethod
+    def register_auth(auth_class: t.Type[TokenDecoder]):
+        """
+        Register authentication handlers
+        :param auth_class:
+        :return:
+        """
+        authenticator.register_token_decoder(auth_class)

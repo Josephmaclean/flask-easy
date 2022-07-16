@@ -42,20 +42,20 @@ def get_template_string(is_sql):
     :return:
     """
     if is_sql:
-        template_string = """from flask_easy.repository import SqlRepository
+        template_string = """from flask_easy.repository.sql import Repository
 from app.models import {{model_name}}
 
 
-class {{repo_name}}(SqlRepository):
+class {{repo_name}}(Repository):
     model = {{model_name}}
 
 """
     else:
-        template_string = """from flask_easy.repository import MongoRepository
+        template_string = """from flask_easy.repository.mongo import Repository
 from app.models import {{model_name}}
 
 
-class {{repo_name}}(MongoRepository):
+class {{repo_name}}(Repository):
     model = {{model_name}}
 
 """

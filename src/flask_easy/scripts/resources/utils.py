@@ -23,7 +23,7 @@ def add_to_init(dir_path, file_name, class_name):
     :return:
     """
     with open(os.path.join(dir_path, "__init__.py"), "a", encoding="UTF-8") as file:
-        file.write(f"from .{file_name} import {class_name}")
+        file.write(f"\nfrom .{file_name} import {class_name}")
 
 
 def remove_suffix(string: str, suffix):

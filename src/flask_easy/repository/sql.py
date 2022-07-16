@@ -15,7 +15,7 @@ from .repository_interface import RepositoryInterface
 IdType = t.Union[int, str]
 
 
-class PeeweeSqlRepository(RepositoryInterface):
+class Repository(RepositoryInterface):
     """SqlRepository interface using Peewee"""
 
     model: t.Type[db.Model]
