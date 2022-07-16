@@ -33,7 +33,7 @@ class Database:
     def initialize_sql(  # pylint: disable=R0913
         self, engine, name=None, user=None, password=None, host=None, port=None
     ):
-        """initalize database connection"""
+        """initialize database connection"""
         db_engine, db_port = self.DB_ENGINE_MAP.get(engine)
 
         port = db_port if port is None else port
