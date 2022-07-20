@@ -24,7 +24,7 @@ def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
 
     def get_db():
         config = app.config
-        return config["DB_ENGINE"]
+        return config["DATABASE"].get("engine")
 
     @easy.command("db:seed")
     @click.argument("cycle", required=False, type=int)
@@ -142,7 +142,7 @@ def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
         config = app.config
         if config:
             try:
-                db_engine = config["DB_ENGINE"]
+                db_engine = get_db()
                 if db_engine == "mongodb":
                     create_model(app.root_path, name, is_sql=False)
                     is_sql = False
@@ -162,7 +162,7 @@ def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
                     )
                 )
             except AttributeError:
-                click.echo(click.style("DB_ENGINE not set", fg="red"))
+                click.echo(click.style("database engine not set", fg="red"))
 
     @generate.command("repository")
     @click.argument("name")
@@ -170,7 +170,7 @@ def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
         config = app.config
         if config:
             try:
-                db_engine = config["DB_ENGINE"]
+                db_engine = get_db()
                 if db_engine == "mongodb":
                     create_repository(
                         app.root_path,
@@ -186,7 +186,7 @@ def init_cli(app: Flask, db_conn):  # pylint: disable=R0915
                     )
                 )
             except AttributeError:
-                click.echo(click.style("DB_ENGINE not set", fg="red"))
+                click.echo(click.style("database engine not set", fg="red"))
 
     @generate.command("view")
     @click.argument("name", required=False)

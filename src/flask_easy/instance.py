@@ -15,13 +15,14 @@ from functools import cached_property
 from flasgger import Swagger
 from flask import Flask, Response
 from flask.typing import ResponseReturnValue
+from playhouse.flask_utils import FlaskDB
+
 from flask_easy.scripts.cli import init_cli
 from .exc.app_exceptions import AppExceptionCase
-from .database import Database
 from .response import ResponseEntity
 from .security import authenticator, TokenDecoder
 
-db = Database()
+db = FlaskDB()
 swag = Swagger()
 
 Route = namedtuple("Route", "view url_prefix", defaults=[None])
@@ -87,36 +88,24 @@ class FlaskEasy:
         Initialize databases based on engine selection
         :return:
         """
-
-        db_host = self.app.config.get("DB_HOST")
-        db_name = self.app.config.get("DB_NAME")
-        db_user = self.app.config.get("DB_USER")
-        db_password = self.app.config.get("DB_PASSWORD")
-        db_port = self.app.config.get("DB_PORT")
-        db_engine = self.app.config.get("DB_ENGINE")
-        if not db_engine:
+        database_param = self.app.config.get("DATABASE")
+        if not database_param:
             return
 
-        db_engine = db_engine.lower()
-
+        db_engine = database_param.get("engine")
         if db_engine == "mongodb":
-            self._initialize_mongodb(db_host, db_name, db_password, db_port, db_user)
+            self._initialize_mongodb(**database_param)
         else:
             db.init_app(self.app)
 
-    def _initialize_mongodb(
-        self, db_host, db_name, db_password, db_port, db_user
-    ):  # pylint: disable=R0913
+    def _initialize_mongodb(self, **kwargs):  # pylint: disable=R0913
         try:
             from flask_mongoengine import MongoEngine  # pylint: disable=C0415
 
-            self.app.config["MONGODB_SETTINGS"] = {
-                "host": db_host,
-                "db": db_name,
-                "username": db_user,
-                "password": db_password,
-                "port": int(db_port) if db_port else 27017,
-            }
+            kwargs.pop("engine")
+            kwargs["username"] = kwargs.pop("user")
+            kwargs["db"] = kwargs.get("name")
+            self.app.config["MONGODB_SETTINGS"] = kwargs
             mongo_engine = MongoEngine()
             mongo_engine.init_app(self.app)
         except ImportError as error:
@@ -146,32 +135,6 @@ class FlaskEasy:
         routes: t.List[Route] = self._urls.routes
         for url_route in routes:
             self.app.register_blueprint(url_route.view, url_prefix=url_route.url_prefix)
-
-    @staticmethod
-    def generate_db_url(
-        engine_prefix,
-        db_host,
-        db_user,
-        db_password,
-        db_port,
-        db_name,
-    ):  # pylint: disable=R0913
-        """
-        generate database connection string
-        :param engine_prefix:
-        :param db_host:
-        :param db_user:
-        :param db_password:
-        :param db_port:
-        :param db_name:
-        :return:
-        """
-        if engine_prefix == "sqlite":
-            return f"sqlite:///{db_name}"
-
-        return (
-            f"{engine_prefix}://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-        )
 
     @staticmethod
     def app_exception_handler(exc):
