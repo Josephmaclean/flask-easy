@@ -47,8 +47,8 @@ This contains the main app. This in addition to the config.py file is what will 
 This file contains all main instance of your app. This is the entry point to the project
 
 ### models
-Battery included directory. This is where your models should be. 
-All models generated using the `flask easy generate model <model_name>` command will be spawned in this directory and 
+Battery included directory. This is where your models should be.
+All models generated using the `flask easy generate model <model_name>` command will be spawned in this directory and
 automatically imported in the `__init__.py` file here
 
 The snippets below are sample codes generated for sql and mongodb respectively using the `generate model` command
@@ -73,11 +73,11 @@ class User(me.Document):
 
 
 ### repositories
-Battery included directory. This is where your repositories should be. We advise that you extract all database logic 
-into this directory. You can also inherit from Repository classes that take care of basic queries so you don't have to 
-do it yourself. These classes can be overridden. 
+Battery included directory. This is where your repositories should be. We advise that you extract all database logic
+into this directory. You can also inherit from Repository classes that take care of basic queries so you don't have to
+do it yourself. These classes can be overridden.
 
-Repositories generate generated using the `flask easy generate repository <repository_name>` command will be spawned in this directory and 
+Repositories generate generated using the `flask easy generate repository <repository_name>` command will be spawned in this directory and
 automatically imported in the `__init__.py` file here
 
 The snippets below are sample codes generated for sql and mongodb respectively using the `generate repository `command
@@ -91,7 +91,7 @@ from app.models import User
 
 class UserRepository(Repository):
     model = User
-    
+
     # other peewee sql query logic goes here
 
 
@@ -106,13 +106,13 @@ from app.models import User
 
 class UserRepository(Repository):
     model = User
-    
+
     # Other mongengine query logic goes here
 
 ```
 
 ### schemas
-Not battery included. The `schemas` directory contains all your marshmallow schema for validating, 
+Not battery included. The `schemas` directory contains all your marshmallow schema for validating,
 serializing and deserializing your data
 
 ### services
@@ -190,10 +190,10 @@ class ProductionConfig(Config):
 
 class TestingConfig(Config):
     pass
-    
+
  ```
 
-With the database connections already taken care for you, it's important to make sure that your database preference 
+With the database connections already taken care for you, it's important to make sure that your database preference
 and credentials are set properly. You can change your database using the `DB_ENGINE` variable. Below are a list of the supported databases
 
 1. postgres
@@ -205,10 +205,10 @@ The `APP_NAME` variable should be changed to your preferred name. This will also
 
 
 ## Database Support
-Flask-Easy banks on [Peewee ORM](http://docs.peewee-orm.com/en/latest/) and [MongoEngine ODM](http://mongoengine.org/) 
-for database connectivity and support and has a thin wrapper around these packages just to take off the stress of setting 
+Flask-Easy banks on [Peewee ORM](http://docs.peewee-orm.com/en/latest/) and [MongoEngine ODM](http://mongoengine.org/)
+for database connectivity and support and has a thin wrapper around these packages just to take off the stress of setting
 your database up from your shoulders. Although you can select your database when scaffolding your app, you can change it
-at anytime in the `config.py` file. 
+at anytime in the `config.py` file.
 
 ### Migration(SQL Only)
 1. Make migration: `flask easy make:migration`
@@ -218,11 +218,11 @@ at anytime in the `config.py` file.
 All migrations are taken care of by the Peewee library.
 
 ## Authentication & Authorization
-Flask easy provides a mechanism for you to easily authenticate and authorize your routes. 
+Flask easy provides a mechanism for you to easily authenticate and authorize your routes.
 
 ## Seeding
 Flask easy provides an inbuilt mechanism for you to easily seed your databases with dummy data for easier and faster
-testing. 
+testing.
 
 ```python
 # models/job.py
@@ -240,7 +240,7 @@ class Job(me.Document):
 
 ```
 ```python
-# factory/job_seeder.py 
+# factory/job_seeder.py
 
 from flask_easy.factory import Seeder
 from app.models import Job
@@ -266,4 +266,3 @@ To seed the database 10 times is as easy as `flask easy db:seed 10 --class_name=
 ## Swagger UI
 Flask Easy comes with swagger UI integrated with the help of the excellent [flasgger library](https://github.com/flasgger/flasgger)
 All the documentation required on its usage is available [here](https://github.com/flasgger/flasgger)
-
