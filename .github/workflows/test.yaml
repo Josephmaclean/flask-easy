@@ -22,6 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          pip install -e .
       - name: Install pylint
         run: pip install pylint
       - uses: pre-commit/action@v3.0.0
