@@ -19,6 +19,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
+      - name: Install dependencies
+        run: |
+          python setup.py egg_info
+          pip install -r Flask_Easy.egg-info/requires.txt
       - name: Install pylint
         run: pip install pylint
       - uses: pre-commit/action@v3.0.0
