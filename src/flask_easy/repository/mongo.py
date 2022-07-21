@@ -11,6 +11,8 @@ import mongoengine as me
 from ..exc import OperationError, NotFoundException
 from .repository_interface import RepositoryInterface
 
+IdType = t.Union[int, str]
+
 
 class Repository(RepositoryInterface):
     """
@@ -112,7 +114,7 @@ class Repository(RepositoryInterface):
             raise OperationError([error.args[0]]) from error
 
     @classmethod
-    def delete(cls, obj_id: t.Union[int, str]) -> bool:
+    def delete_by_id(cls, obj_id: IdType) -> bool:
         """
         delete an object matching the id
         :param obj_id: id of object to be deleted
