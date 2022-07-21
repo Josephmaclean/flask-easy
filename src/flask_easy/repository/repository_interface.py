@@ -96,7 +96,7 @@ class RepositoryInterface(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def delete(cls, obj_id: IdType):
+    def delete_by_id(cls, obj_id: IdType):
         """
         takes in an id, finds and deletes the record
         :param obj_id:
