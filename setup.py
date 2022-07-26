@@ -15,9 +15,9 @@ setup(
         "peewee>=3.14.0",
         "peewee-migrate>=1.4.8",
         "watchdog>=2.1.2",
-        "cookiecutter>=1.7.3",
         "apispec>=5.2.2",
         "faker>=13.12.0",
+        "copier>=6.1.0",
     ],
     entry_points={
         "console_scripts": ["easy-admin=flask_easy.scripts.easy_scripts:cli"]
