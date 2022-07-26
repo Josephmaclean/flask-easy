@@ -4,8 +4,9 @@ easy_scripts.py
 Author: Joseph Maclean Arhin
 """
 
+import os
 import click
-from cookiecutter.main import cookiecutter
+from copier import run_auto
 
 
 @click.group()
@@ -24,16 +25,16 @@ def scaffold(output_dir: str):
     :param output_dir:
     :return:
     """
-    if output_dir is None:
-        val = click.prompt("Project name")
-        extra_context = {"_project_name": val}
+    out_path = os.path.join(os.getcwd(), output_dir)
+    if output_dir == ".":
+        extra_context = {"default_project_name": os.path.split(os.getcwd())[1]}
     else:
-        extra_context = {"_project_name": "My Awesome App", "_remove_parent": True}
-    cookiecutter(
-        "https://github.com/Josephmaclean/easy-scaffold.git",
-        output_dir=output_dir,
-        extra_context=extra_context,
-    )
+        project_name = "_".join(output_dir.split(" "))
+        extra_context = {"default_project_name": project_name}
+        out_path = os.path.join(os.getcwd(), project_name)
+
+    # copier.main.c
+    run_auto("gh:josephmaclean/easy-scaffold-copier", out_path, data=extra_context)
 
 
 if __name__ == "__main__":

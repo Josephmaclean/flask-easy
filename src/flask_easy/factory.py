@@ -32,8 +32,6 @@ def run_seeder(count, model, app: Flask):
         spec.loader.exec_module(module)
 
     _get_factory()
-    # db.connect_db()
-    # get_subclasses()
 
     for _ in range(count):
         if model is None:

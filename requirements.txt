@@ -56,3 +56,5 @@ watchdog==2.1.9
 Werkzeug==2.1.2
 WTForms==3.0.1
 zipp==3.8.1
+copier~=6.1.0
+setuptools~=47.1.0
