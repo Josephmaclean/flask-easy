@@ -3,7 +3,6 @@ App Exceptions
 """
 
 from typing import Optional
-from flask import current_app as app
 
 
 class AppExceptionCase(Exception):
@@ -11,15 +10,16 @@ class AppExceptionCase(Exception):
     Base exception case to be inherited by all other exceptions
     """
 
-    def __init__(self, status_code: int, message):  # pylint: disable=w0231
+    def __init__(self, message, **kwargs):  # pylint: disable=w0231
         """
 
         :param status_code:
         :param message: extra data to give the error more context
         """
-        app.logger.error(message)
         self.exception_case = self.__class__.__name__
-        self.status_code = status_code
+        status = kwargs.get("status_code")
+        if status:
+            self.status_code = status
         self.context = (
             message if isinstance(message, dict) else {self.__class__.__name__: message}
         )
@@ -37,9 +37,7 @@ class InternalServerError(AppExceptionCase):
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
     """
 
-    def __init__(self, message):
-        status_code = 500
-        AppExceptionCase.__init__(self, status_code, message)
+    status_code = 500
 
 
 class OperationError(InternalServerError):
@@ -54,9 +52,7 @@ class NotFoundException(AppExceptionCase):
         https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
     """
 
-    def __init__(self, message="Resource not found"):
-        status_code = 404
-        AppExceptionCase.__init__(self, status_code, message)
+    status_code = 404
 
 
 class Unauthorized(AppExceptionCase):
@@ -65,13 +61,7 @@ class Unauthorized(AppExceptionCase):
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
     """
 
-    def __init__(self, message="Unauthorized", status_code=401):
-        """
-        Unauthorized
-        :param message: extra dictionary object to give the error more context
-        """
-        # AppExceptionCase.__init__(self, status_code, message)
-        super().__init__(status_code, message)
+    status_code = 401
 
 
 class BadRequest(AppExceptionCase):
@@ -80,14 +70,7 @@ class BadRequest(AppExceptionCase):
     https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
     """
 
-    def __init__(self, message=None):
-        """
-        Bad Request
-
-        :param message:
-        """
-        status_code = 400
-        AppExceptionCase.__init__(self, status_code, message)
+    status_code = 400
 
 
 class ResourceExists(BadRequest):

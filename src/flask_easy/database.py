@@ -6,7 +6,7 @@
 # import sys
 # import typing as t
 # from flask import Flask
-# from peewee import  Model as BaseModel
+# from peewee import Model as BaseModel
 #
 #
 # class Database:
@@ -32,15 +32,12 @@
 #         self.Model = self.get_model()
 #         # pylint: disable=C0103
 #
-#     def initialize_sql(  # pylint: disable=R0913
-#         self, engine, name=None, **kwargs
-#     ):
+#     def initialize_sql(self, engine, name=None, **kwargs):  # pylint: disable=R0913
 #         """initialize database connection"""
-#         db_engine = getattr(sys.modules['peewee'], engine)
+#         db_engine = getattr(sys.modules["peewee"], engine)
 #
-#         if engine == 'SqliteDatabase':
-#             database = db_engine(
-#                 name)
+#         if engine == "SqliteDatabase":
+#             database = db_engine(name)
 #             # database.connect()
 #             return database
 #         return db_engine(name, **kwargs)
@@ -48,9 +45,7 @@
 #     def load(self):
 #         """load database"""
 #         config = self.app.config.pop("DATABASE")
-#         return self.initialize_sql(
-#             **config
-#         )
+#         return self.initialize_sql(**config)
 #
 #     def get_model(self):
 #         """Generate model class"""

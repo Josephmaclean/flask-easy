@@ -89,7 +89,7 @@ def auth_required(roles=None):
                     kwargs["username"] = authenticator.user_name
                 return func(*args, **kwargs)
 
-            raise Unauthorized()
+            raise Unauthorized("Unauthorized")
 
         return view_wrapper
 

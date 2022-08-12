@@ -1,0 +1,30 @@
+name: Upload Python Package
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+  push:
+    branches:
+      - develop
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  lint_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -e .
+      - name: Install pylint
+        run: pip install pylint
+      - uses: pre-commit/action@v3.0.0
+      - name: Run tests
+        run: python -m pytest
